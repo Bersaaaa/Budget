@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mon budget personnel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#eef3f6;--card:#fff;--ink:#14283a;--mute:#5d7285;--line:#d5e0e7;--inc:#0f8b6d;--sav:#2f6fb0;--exp:#d6453d;--rest:#c89b2b;--r:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1a24;--card:#152532;--ink:#e6eef4;--mute:#93a8b8;--line:#243a4b;--inc:#3ec9a1;--sav:#6aa8e6;--exp:#ff7a70;--rest:#e5bd52}}
+:root[data-theme="dark"]{--bg:#0e1a24;--card:#152532;--ink:#e6eef4;--mute:#93a8b8;--line:#243a4b;--inc:#3ec9a1;--sav:#6aa8e6;--exp:#ff7a70;--rest:#e5bd52}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 Figtree,system-ui,sans-serif}
+h1,h2,.big{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px 14px 60px}
+h1{font-size:1.6rem;margin:6px 0 2px}
+.sub{color:var(--mute);margin:0 0 14px;font-size:.92rem}
+.sum{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px}
+@media(min-width:560px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stats span{display:block;color:var(--mute);font-size:.8rem}
+.big{font-size:1.3rem;font-weight:700;font-variant-numeric:tabular-nums}
+.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line);margin-top:14px}
+.bar i{display:block;transition:width .25s}
+.leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.78rem;color:var(--mute);margin-top:8px}
+.leg b{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+#alert{margin-top:8px;font-size:.85rem;color:var(--exp);font-weight:600}
+.months{display:flex;gap:6px;overflow-x:auto;padding:14px 2px 6px}
+.months button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:7px 14px;font:inherit;font-weight:500;cursor:pointer}
+.months button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+button.t{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:6px 11px;font:inherit;font-size:.85rem;cursor:pointer}
+button.t[aria-pressed=true]{background:var(--sav);color:#fff;border-color:var(--sav)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--sav);outline-offset:1px}
+section{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-top:14px;overflow:hidden}
+section>h2{margin:0;padding:14px 16px;font-size:1.15rem;display:flex;justify-content:space-between;align-items:baseline;border-left:6px solid var(--c)}
+output{font-variant-numeric:tabular-nums}
+.grp{border-top:1px solid var(--line);padding:6px 16px 8px}
+.grp h3{margin:8px 0 2px;font-size:.9rem;color:var(--mute);font-weight:600;display:flex;justify-content:space-between}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0}
+.row label{flex:1;min-width:0}
+input.f,textarea{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:7px 9px;font:inherit}
+.row input.n{width:112px;text-align:right;font-variant-numeric:tabular-nums}
+.row .ro{width:112px;text-align:right;font-variant-numeric:tabular-nums;padding:7px 9px}
+.row input.lab{flex:1;min-width:0}
+.x{border:0;background:transparent;color:var(--exp);font-size:1.1rem;cursor:pointer;padding:4px 8px}
+.add{border:1px dashed var(--line);background:transparent;color:var(--mute);border-radius:8px;padding:6px 10px;font:inherit;font-size:.85rem;margin:6px 0 2px;cursor:pointer}
+.newcat{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--line)}
+.newcat input{flex:1;min-width:0}
+.chart{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;height:130px;padding:6px 16px 0}
+.chart div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:2px;font-size:.68rem;color:var(--mute)}
+.pair{display:flex;align-items:flex-end;gap:2px;height:100px}
+.pair i{width:8px;border-radius:3px 3px 0 0;min-height:1px}
+.note{font-size:.8rem;color:var(--mute);padding:8px 16px 14px;margin:0}
+main>.note{padding:14px 2px}
+dialog{border:1px solid var(--line);border-radius:var(--r);background:var(--card);color:var(--ink);width:min(560px,92vw)}
+dialog textarea{width:100%;height:200px;font:12px/1.4 ui-monospace,monospace}
+dialog .tools{justify-content:flex-end}
+main:not(.in) .sum,main:not(.in) .months,main:not(.in) .tools,main:not(.in) #chartBox,main:not(.in) #app{display:none}
+main.in #auth{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>Mon budget personnel</h1>
+<p class="sub">Saisissez vos revenus, votre épargne et vos dépenses mois par mois. Les totaux se calculent seuls.</p>
+
+<section id="auth" style="--c:var(--sav)"><h2><span>Connexion</span></h2><div class="grp">
+  <div class="row"><label for="em">E-mail</label><input id="em" class="f" type="email" autocomplete="email" style="width:220px"></div>
+  <div class="row"><label for="pw">Mot de passe</label><input id="pw" class="f" type="password" autocomplete="current-password" style="width:220px"></div>
+  <div class="tools"><button class="t" id="inBtn">Se connecter</button><button class="t" id="upBtn">Créer un compte</button></div>
+  <div class="sub" id="authMsg" role="status"></div></div></section>
+<div class="sum">
+  <div class="stats">
+    <div><span>Revenus</span><div class="big" id="sInc" style="color:var(--inc)"></div></div>
+    <div><span>Objectif d'épargne</span><div class="big" id="sSav" style="color:var(--sav)"></div></div>
+    <div><span>Dépenses</span><div class="big" id="sExp" style="color:var(--exp)"></div></div>
+    <div><span>Reste à épargner</span><div class="big" id="sRest"></div></div>
+  </div>
+  <div class="bar"><i id="bE" style="background:var(--exp)"></i><i id="bS" style="background:var(--sav)"></i><i id="bR" style="background:var(--rest)"></i></div>
+  <div class="leg"><span><b style="background:var(--exp)"></b>Dépenses</span><span><b style="background:var(--sav)"></b>Épargne</span><span><b style="background:var(--rest)"></b>Reste</span></div>
+  <div id="alert" role="status"></div>
+</div>
+
+<div class="months" id="months" role="group" aria-label="Période"></div>
+<div class="tools" id="tools"></div>
+<div id="chartBox"></div>
+<div id="app"></div>
+<p class="note" id="status"></p>
+</main>
+
+<dialog id="dlg">
+  <p style="margin-top:0"><b>Sauvegarde des données</b><br><span class="sub">Copiez ce texte pour conserver une sauvegarde, ou collez une sauvegarde puis chargez-la.</span></p>
+  <textarea id="bk" spellcheck="false"></textarea>
+  <div class="tools"><button class="t" id="bkLoad">Charger ces données</button><button class="t" id="bkClose">Fermer</button></div>
+  <div id="bkMsg" class="sub"></div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const MONTHS=['Janv.','Févr.','Mars','Avr.','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.'];
+const SEC=[{id:'inc',t:'Revenus',c:'var(--inc)'},{id:'sav',t:'Épargne',c:'var(--sav)'},{id:'exp',t:'Dépenses',c:'var(--exp)'}];
+const SEED={
+inc:[['',[['Salaire 1',5987],['Salaire 2',200],['Revenus annexes',100],['Intérêts / dividendes',55],['Autres revenus',500],['Autre',300],['Autre',115]]]],
+sav:[['',[['Épargne et placements',500],['Fonds d\'urgence',200],['Retraite',100],['Études des enfants',55],['Vacances',500],['Autre',300]]]],
+exp:[
+['Logement',[['Loyer / crédit immobilier',2250],['Assurance habitation',25],['Taxes foncières',40],['Entretien et réparations',44],['Charges (électricité, gaz, eau)',20],['Internet et streaming',15],['Autre',0],['Autre',29]]],
+['Transport',[['Crédit auto',250],['Carburant',100],['Assurance auto',100],['Transports en commun / VTC',0],['Entretien auto',0],['Autre',100]]],
+['Santé',[['Mutuelle',250],['Frais médicaux',100],['Dentaire / optique',100],['Médicaments',0],['Autre',0]]],
+['Vie quotidienne',[['Courses',250],['Fournitures pour la maison',100],['Vêtements et chaussures',100],['Garde d\'enfants / scolarité',100],['Animaux',0]]],
+['Loisirs',[['Restaurants',65],['Divertissements et abonnements',20],['Loisirs',0],['Voyages',0],['Autre',0]]],
+['Personnel et famille',[['Soins personnels',450],['Cadeaux et fêtes',250],['Formation',200],['Adhésions et abonnements',50],['Autre',100]]],
+['Dons',[['Dons à des associations',450],['Dons religieux',250],['Autre',200]]],
+['Autres',[['Remboursements (prêts, cartes)',450],['Dépenses diverses',250],['Autre',200]]]]};
+
+/* ---------- Base Supabase (Postgres) : tables "lignes" et "montants" ---------- */
+const SUPABASE_URL='https://gmvmtquyaribjlmllpth.supabase.co';   // ex. https://xxxx.supabase.co
+const SUPABASE_KEY='sb_publishable_K_jRrMOg4DIc3hrwgf-HAA_L72xdeeE';   // clé "anon" / "publishable" du projet
+let sb=null,L=[],A={},cur=0,edit=false,uidUser=null;
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const zeros=()=>Array(12).fill(0);
+const $=id=>document.getElementById(id);
+const setStatus=(ok,msg)=>{$('status').textContent=ok?'Vos données sont enregistrées dans votre base Supabase.':'Erreur Supabase'+(msg?' : '+msg:'')+'. Vos dernières modifications ne sont peut-être pas enregistrées.'};
+let Q=Promise.resolve();
+const q=fn=>{Q=Q.then(async()=>{const r=await fn();if(r&&r.error)throw r.error;setStatus(true)}).catch(e=>setStatus(false,e.message||''))};
+const row=l=>({id:l.id,sec:l.sec,grp:l.grp,label:l.label,ord:l.ord});
+const putL=l=>q(()=>sb.from('lignes').upsert(row(l)));
+const putM=(id,m,v)=>q(()=>sb.from('montants').upsert({ligne_id:id,mois:m,v},{onConflict:'ligne_id,mois'}));
+const delL=id=>q(()=>sb.from('lignes').delete().eq('id',id));
+const saveAll=()=>q(async()=>{
+  let r=await sb.from('lignes').delete().neq('id','');if(r.error)return r;
+  if(!L.length)return r;
+  r=await sb.from('lignes').insert(L.map(row));if(r.error)return r;
+  const M=[];L.forEach(l=>A[l.id].forEach((v,m)=>{if(v)M.push({ligne_id:l.id,mois:m,v})}));
+  return M.length?sb.from('montants').insert(M):r});
+async function all(t,cols){let out=[],from=0;for(;;){const {data,error}=await sb.from(t).select(cols).range(from,from+999);if(error)throw error;out=out.concat(data);if(data.length<1000)return out;from+=1000}}
+
+function seed(){L=[];A={};let o=0;
+  SEC.forEach(s=>SEED[s.id].forEach(g=>g[1].forEach(r=>{const id=uid()+(o);L.push({id,sec:s.id,grp:g[0],label:r[0],ord:o++});A[id]=zeros();A[id][0]=r[1]})))}
+
+async function start(){
+  L=[];A={};let ok=false;
+  try{L=await all('lignes','id,sec,grp,label,ord');const M=await all('montants','ligne_id,mois,v');
+    L.forEach(l=>A[l.id]=zeros());M.forEach(m=>{if(A[m.ligne_id])A[m.ligne_id][m.mois]=+m.v});ok=true;setStatus(true)}
+  catch(e){setStatus(false,e.message)}
+  if(ok&&!L.length){seed();saveAll()}
+  document.querySelector('main').classList.add('in');head();build();refresh()}
+
+/* ---------- Connexion ---------- */
+async function login(up){
+  const c={email:$('em').value.trim(),password:$('pw').value},msg=$('authMsg');msg.textContent='';
+  const r=up?await sb.auth.signUp(c):await sb.auth.signInWithPassword(c);
+  if(r.error)msg.textContent=r.error.message;
+  else if(up&&!r.data.session)msg.textContent='Compte créé. Confirmez votre e-mail, puis connectez-vous.'}
+$('inBtn').onclick=()=>login(false);$('upBtn').onclick=()=>login(true);
+if(!SUPABASE_URL||!SUPABASE_KEY||!window.supabase){
+  $('authMsg').textContent='Renseignez SUPABASE_URL et SUPABASE_KEY au début du script, après avoir exécuté schema.sql dans Supabase.';
+  $('inBtn').disabled=$('upBtn').disabled=true}
+else{sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  sb.auth.onAuthStateChange((ev,s)=>{
+    if(s&&s.user){if(uidUser!==s.user.id){uidUser=s.user.id;setTimeout(start,0)}}
+    else{uidUser=null;document.querySelector('main').classList.remove('in')}})}
+
+/* ---------- Calculs ---------- */
+const fmt=n=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+const val=(id,m)=>m===12?A[id].reduce((a,b)=>a+b,0):A[id][m];
+const rowsOf=s=>L.filter(l=>l.sec===s).sort((a,b)=>a.ord-b.ord);
+const groupsOf=s=>{const g=[];rowsOf(s).forEach(l=>{let x=g.find(y=>y.n===l.grp);if(!x)g.push(x={n:l.grp,rows:[]});x.rows.push(l)});return g};
+const sumRows=(rows,m)=>rows.reduce((a,l)=>a+val(l.id,m),0);
+const gid=(s,i)=>'g_'+s+i;
+
+/* ---------- Interface ---------- */
+function head(){
+  const el=document.getElementById('months');el.innerHTML='';
+  [...MONTHS,'Année'].forEach((n,i)=>{const b=document.createElement('button');b.textContent=n;b.setAttribute('aria-pressed',i===cur);b.onclick=()=>{cur=i;head();build();refresh()};el.appendChild(b)});
+  const t=document.getElementById('tools');t.innerHTML='';
+  const mk=(txt,fn,cls)=>{const b=document.createElement('button');b.className='t';b.textContent=txt;b.onclick=()=>fn(b);t.appendChild(b);return b};
+  const ed=mk(edit?'Terminer la modification':'Modifier les lignes',()=>{edit=!edit;head();build();refresh()});ed.setAttribute('aria-pressed',edit);
+  if(cur>0&&cur<12&&!edit)mk('Copier '+MONTHS[cur-1].replace('.','')+' vers ce mois',()=>{L.forEach(l=>{A[l.id][cur]=A[l.id][cur-1]});saveAll();build();refresh()});
+  const two=(txt,fn)=>mk(txt,b=>{if(b.dataset.ok){fn()}else{b.dataset.ok=1;b.textContent='Confirmer ?';setTimeout(()=>{b.textContent=txt;delete b.dataset.ok},3500)}});
+  two('Tout vider',()=>{L.forEach(l=>A[l.id]=zeros());saveAll();build();refresh()});
+  two('Remettre l\'exemple',()=>{seed();saveAll();build();refresh()});
+  mk('Sauvegarde',()=>{bk.value=JSON.stringify({lignes:L,montants:A});bkMsg.textContent='';dlg.showModal()});
+  mk('Se déconnecter',()=>sb.auth.signOut());
+}
+
+function build(){
+  const app=document.getElementById('app');app.innerHTML='';
+  SEC.forEach(s=>{
+    const sec=document.createElement('section');sec.style.setProperty('--c',s.c);
+    sec.innerHTML=`<h2><span>${s.t}</span><output id="t_${s.id}"></output></h2>`;
+    groupsOf(s.id).forEach((g,gi)=>{
+      const d=document.createElement('div');d.className='grp';
+      if(g.n)d.insertAdjacentHTML('beforeend',`<h3><span></span><output id="${gid(s.id,gi)}"></output></h3>`),d.querySelector('h3 span').textContent=g.n;
+      g.rows.forEach(l=>{
+        const row=document.createElement('div');row.className='row';
+        if(edit){
+          const i=document.createElement('input');i.className='f lab';i.value=l.label;i.setAttribute('aria-label','Nom de la ligne');
+          i.onchange=()=>{l.label=i.value.trim()||'Autre';i.value=l.label;putL(l)};row.appendChild(i);
+          const x=document.createElement('button');x.className='x';x.textContent='✕';x.title='Supprimer la ligne';x.setAttribute('aria-label','Supprimer '+l.label);
+          x.onclick=()=>{L=L.filter(y=>y.id!==l.id);delete A[l.id];delL(l.id);build();refresh()};row.appendChild(x);
+        }else{
+          const lab=document.createElement('label');lab.textContent=l.label;lab.htmlFor='i_'+l.id;row.appendChild(lab);
+          if(cur===12){const o=document.createElement('div');o.className='ro';o.textContent=fmt(val(l.id,12));row.appendChild(o)}
+          else{const i=document.createElement('input');i.id='i_'+l.id;i.className='f n';i.type='number';i.inputMode='decimal';i.min='0';i.step='any';i.placeholder='0';i.value=A[l.id][cur]||'';
+            i.oninput=()=>{const v=Math.max(0,parseFloat(i.value)||0);A[l.id][cur]=v;putM(l.id,cur,v);refresh()};row.appendChild(i)}
+        }
+        d.appendChild(row)});
+      if(edit){const b=document.createElement('button');b.className='add';b.textContent='+ Ajouter une ligne';
+        b.onclick=()=>{const l={id:uid(),sec:s.id,grp:g.n,label:'Nouvelle ligne',ord:Math.max(-1,...L.map(y=>y.ord))+1};L.push(l);A[l.id]=zeros();putL(l);build();refresh()};d.appendChild(b)}
+      sec.appendChild(d)});
+    if(edit&&s.id==='exp'){
+      const n=document.createElement('div');n.className='newcat';
+      n.innerHTML='<input class="f" placeholder="Nom de la nouvelle catégorie" aria-label="Nouvelle catégorie"><button class="t">Ajouter la catégorie</button>';
+      n.querySelector('button').onclick=()=>{const v=n.querySelector('input').value.trim();if(!v)return;
+        const l={id:uid(),sec:'exp',grp:v,label:'Nouvelle ligne',ord:Math.max(-1,...L.map(y=>y.ord))+1};L.push(l);A[l.id]=zeros();putL(l);build();refresh()};
+      sec.appendChild(n)}
+    app.appendChild(sec)});
+}
+
+function refresh(){
+  const m=cur,inc=sumRows(rowsOf('inc'),m),sav=sumRows(rowsOf('sav'),m),exp=sumRows(rowsOf('exp'),m),rest=inc-sav-exp;
+  sInc.textContent=fmt(inc);sSav.textContent=fmt(sav);sExp.textContent=fmt(exp);
+  sRest.textContent=fmt(rest);sRest.style.color=rest<0?'var(--exp)':'var(--inc)';
+  const base=Math.max(inc,exp+sav)||1;
+  bE.style.width=exp/base*100+'%';bS.style.width=sav/base*100+'%';bR.style.width=Math.max(rest,0)/base*100+'%';
+  document.getElementById('alert').textContent=rest<0?`Dépenses et épargne dépassent les revenus de ${fmt(-rest)}.`:'';
+  SEC.forEach(s=>{const t=document.getElementById('t_'+s.id);if(t)t.textContent=fmt(sumRows(rowsOf(s.id),m));
+    groupsOf(s.id).forEach((g,gi)=>{const o=document.getElementById(gid(s.id,gi));if(o)o.textContent=fmt(sumRows(g.rows,m))})});
+  const box=document.getElementById('chartBox');
+  if(cur!==12||edit){box.innerHTML='';return}
+  const R=MONTHS.map((_,k)=>[sumRows(rowsOf('inc'),k),sumRows(rowsOf('sav'),k)+sumRows(rowsOf('exp'),k)]),mx=Math.max(1,...R.flat());
+  box.innerHTML='<section style="--c:var(--rest)"><h2><span>Revenus et sorties par mois</span></h2><div class="chart" role="img" aria-label="Revenus et sorties par mois">'+
+    R.map((r,k)=>`<div><span class="pair"><i style="height:${r[0]/mx*100}%;background:var(--inc)"></i><i style="height:${r[1]/mx*100}%;background:var(--exp)"></i></span>${MONTHS[k][0]}</div>`).join('')+
+    '</div><p class="note">Vert : revenus. Rouge : dépenses et épargne.</p></section>';
+}
+
+/* ---------- Sauvegarde / restauration ---------- */
+const dlg=document.getElementById('dlg'),bk=document.getElementById('bk'),bkMsg=document.getElementById('bkMsg');
+document.getElementById('bkClose').onclick=()=>dlg.close();
+document.getElementById('bkLoad').onclick=async()=>{
+  try{const d=JSON.parse(bk.value);
+    if(!Array.isArray(d.lignes)||typeof d.montants!=='object')throw 0;
+    L=d.lignes.map((l,i)=>({id:String(l.id),sec:l.sec,grp:l.grp||'',label:String(l.label||'Autre'),ord:l.ord??i})).filter(l=>SEC.some(s=>s.id===l.sec));
+    A={};L.forEach(l=>{const a=d.montants[l.id];A[l.id]=Array.isArray(a)&&a.length===12?a.map(x=>+x||0):zeros()});
+    await saveAll();build();refresh();dlg.close()}
+  catch(e){bkMsg.textContent='Sauvegarde illisible : collez le texte complet, sans modification.'}};
+
+</script>
+</body>
+</html>
