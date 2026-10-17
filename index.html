@@ -36,9 +36,12 @@ h1{font-size:1.6rem;margin:6px 0 2px}
 .leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.78rem;color:var(--mute);margin-top:8px}
 .leg b{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
 #alert{margin-top:8px;font-size:.85rem;color:var(--exp);font-weight:600}
-.months{display:flex;gap:6px;overflow-x:auto;padding:14px 2px 6px}
-.months button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:7px 14px;font:inherit;font-weight:500;cursor:pointer}
-.months button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.months{display:flex;gap:8px;align-items:stretch;padding:14px 0 6px}
+.months select{flex:1;min-width:0;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:10px 12px;font:inherit;font-weight:600;font-size:1.05rem}
+.months button{flex:none;width:48px;font-size:1.4rem;line-height:1}
+.months button:disabled{opacity:.35;cursor:default}
+select.tagsel{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:7px 9px;font:inherit}
+.months button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;font-family:inherit;font-weight:600;cursor:pointer}
 .tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
 button.t{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:6px 11px;font:inherit;font-size:.85rem;cursor:pointer}
 button.t[aria-pressed=true]{background:var(--sav);color:#fff;border-color:var(--sav)}
@@ -70,13 +73,13 @@ dialog .tools{justify-content:flex-end}
 form.newcat{flex-wrap:wrap}
 form.newcat input[name=nom]{flex:1 1 100%}
 form.newcat input[name=mt]{flex:1 1 90px;width:auto}
-form.newcat input.tg{flex:1 1 100px;width:auto}
+form.newcat select.tagsel{flex:1 1 100px;min-width:0}
 form.newcat input[type=number]{text-align:right}
 .empty{color:var(--mute);font-size:.9rem;margin:8px 0}
 .row input.lab.plain{border-color:transparent;background:transparent;padding-left:0}
 .row input.lab.plain:hover,.row input.lab.plain:focus{border-color:var(--line);background:var(--bg);padding-left:9px}
 .tagline{padding:0 0 6px}
-.tagline input{width:150px;font-size:.8rem;padding:4px 8px;border-radius:14px;color:var(--mute)}
+.tagline select{font-size:.85rem;padding:4px 8px;border-radius:14px;color:var(--mute)}
 .tagline span{display:inline-block;font-size:.8rem;color:var(--mute);border:1px solid var(--line);border-radius:14px;padding:2px 9px}
 
 .tgrow{padding:6px 0}
@@ -124,12 +127,14 @@ const FIXED={inc:['Salaires','Autres'],sav:['Épargne pro','Épargne perso']};
 
 /* ---------- Stockage dans le navigateur (localStorage) ---------- */
 const KEY='sbr-budget-v1';
-let L=[],A={},cur=0;
+let L=[],A={},cur=new Date().getMonth(),TAGS=[];
+const MFULL=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const DEFTAGS=['Logement','Auto','Alimentation','Santé','Loisirs','Abonnements','Famille','Pro','Autre'];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const zeros=()=>Array(12).fill(0);
 const $=id=>document.getElementById(id);
 const setStatus=ok=>{$('status').textContent=ok?'Données enregistrées dans ce navigateur, sur cet appareil. Pensez à faire une sauvegarde de temps en temps.':'Enregistrement impossible dans ce navigateur (navigation privée ou stockage bloqué). Utilisez « Sauvegarde » pour ne rien perdre.'};
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({lignes:L,montants:A}));setStatus(true)}catch(e){setStatus(false)}};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({lignes:L,montants:A,tags:TAGS}));setStatus(true)}catch(e){setStatus(false)}};
 function load(){
   try{const d=JSON.parse(localStorage.getItem(KEY)||'null');
     if(d&&Array.isArray(d.lignes)&&d.montants){importData(d);return true}}catch(e){}
@@ -137,6 +142,7 @@ function load(){
 function importData(d){
   L=d.lignes.map((l,i)=>({id:String(l.id),sec:l.sec,grp:l.grp||'',label:String(l.label||'Autre'),tag:String(l.tag||'').trim().slice(0,24),ord:l.ord??i})).filter(l=>SEC.some(s=>s.id===l.sec));
   A={};L.forEach(l=>{const a=d.montants[l.id];A[l.id]=Array.isArray(a)&&a.length===12?a.map(x=>+x||0):zeros()});
+  TAGS=[...new Set([...DEFTAGS,...(Array.isArray(d.tags)?d.tags.map(t=>String(t).trim()).filter(Boolean):[]),...L.map(l=>l.tag).filter(Boolean)])];
   ensureFixed()}
 
 /* Garantit les 4 lignes fixes et reverse dans celles-ci les anciennes lignes (totaux conservés). */
@@ -152,7 +158,7 @@ function ensureFixed(){
       L=L.filter(y=>y.id!==old.id);delete A[old.id]})})}
 
 function start(){
-  if(!load()){L=[];A={};ensureFixed();save()}
+  if(!load()){L=[];A={};TAGS=[...DEFTAGS];ensureFixed();save()}
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
   setStatus(true);head();build();refresh()}
 
@@ -165,17 +171,33 @@ const sumRows=(rows,m)=>rows.reduce((a,l)=>a+val(l.id,m),0);
 /* ---------- Interface ---------- */
 function head(){
   const el=document.getElementById('months');el.innerHTML='';
-  [...MONTHS,'Année'].forEach((n,i)=>{const b=document.createElement('button');b.textContent=n;b.setAttribute('aria-pressed',i===cur);b.onclick=()=>{cur=i;head();build();refresh()};el.appendChild(b)});
+  const go=n=>{cur=n;head();build();refresh()};
+  const pv=document.createElement('button');pv.textContent='‹';pv.setAttribute('aria-label','Mois précédent');pv.disabled=cur===0||cur===12;pv.onclick=()=>go(cur-1);
+  const sel=document.createElement('select');sel.setAttribute('aria-label','Choisir le mois');
+  [...MFULL,'Année complète'].forEach((n,k)=>{const o=document.createElement('option');o.value=k;o.textContent=n;sel.appendChild(o)});
+  sel.value=cur;sel.onchange=()=>go(+sel.value);
+  const nx=document.createElement('button');nx.textContent='›';nx.setAttribute('aria-label','Mois suivant');nx.disabled=cur>=11;nx.onclick=()=>go(cur+1);
+  el.append(pv,sel,nx);
   const t=document.getElementById('tools');t.innerHTML='';
   const mk=(txt,fn)=>{const b=document.createElement('button');b.className='t';b.textContent=txt;b.onclick=()=>fn(b);t.appendChild(b);return b};
   if(cur>0&&cur<12)mk('Copier '+MONTHS[cur-1].replace('.','')+' vers ce mois',()=>{L.forEach(l=>{A[l.id][cur]=A[l.id][cur-1]});save();build();refresh()});
   const two=(txt,fn)=>mk(txt,b=>{if(b.dataset.ok){fn()}else{b.dataset.ok=1;b.textContent='Confirmer ?';setTimeout(()=>{b.textContent=txt;delete b.dataset.ok},3500)}});
   two('Tout vider',()=>{L=L.filter(l=>l.sec!=='exp');Object.keys(A).forEach(id=>{if(!L.some(l=>l.id===id))delete A[id]});L.forEach(l=>A[l.id]=zeros());save();build();refresh()});
-  mk('Sauvegarde',()=>{bk.value=JSON.stringify({lignes:L,montants:A});bkMsg.textContent='';dlg.showModal()});
+  mk('Sauvegarde',()=>{bk.value=JSON.stringify({lignes:L,montants:A,tags:TAGS});bkMsg.textContent='';dlg.showModal()});
 }
 
-const allTags=()=>[...new Set(L.filter(l=>l.sec==='exp'&&l.tag).map(l=>l.tag))].sort((a,b)=>a.localeCompare(b,'fr'));
-const canonTag=v=>{v=String(v||'').trim().slice(0,24);const k=allTags().find(t=>t.toLowerCase()===v.toLowerCase());return k||v};
+const fillTags=(s,v)=>{s.innerHTML='';[['','Sans tag'],...TAGS.map(t=>[t,t]),['__new','＋ Nouveau tag…']].forEach(([a,b])=>{const o=document.createElement('option');o.value=a;o.textContent=b;s.appendChild(o)});s.value=TAGS.includes(v)?v:''};
+function tagSelect(v,label,cb){
+  const s=document.createElement('select');s.className='tagsel';s.setAttribute('aria-label',label);if(!label)s.name='tag';fillTags(s,v);let prev=s.value;
+  s.onchange=()=>{
+    if(s.value==='__new'){
+      const n=(prompt('Nom du nouveau tag')||'').trim().slice(0,24);
+      let t=prev;
+      if(n){t=TAGS.find(x=>x.toLowerCase()===n.toLowerCase())||n;if(!TAGS.includes(t)){TAGS.push(t);save()}}
+      document.querySelectorAll('select.tagsel').forEach(x=>{if(x!==s)fillTags(x,x.value)});
+      fillTags(s,t)}
+    prev=s.value;if(cb)cb(s.value)};
+  return s}
 function amountInput(l){
   const i=document.createElement('input');i.id='i_'+l.id;i.className='f n';i.type='number';i.inputMode='decimal';i.min='0';i.step='any';i.placeholder='0';i.value=A[l.id][cur]||'';
   i.setAttribute('aria-label','Montant : '+l.label);
@@ -207,22 +229,21 @@ function build(){
       d.appendChild(row);
       if(s.id==='exp'){const tl=document.createElement('div');tl.className='tagline';
         if(cur===12){if(l.tag){const sp=document.createElement('span');sp.textContent=l.tag;tl.appendChild(sp);d.appendChild(tl)}}
-        else{const ti=document.createElement('input');ti.className='f';ti.placeholder='+ tag';ti.value=l.tag||'';ti.setAttribute('list','tagNames');ti.setAttribute('aria-label','Tag de '+l.label);
-          ti.onchange=()=>{l.tag=canonTag(ti.value);ti.value=l.tag;save();refresh()};tl.appendChild(ti);d.appendChild(tl)}}});
+        else{tl.appendChild(tagSelect(l.tag||'','Tag de '+l.label,t=>{l.tag=t;save();refresh()}));d.appendChild(tl)}}});
     if(s.id==='exp'&&!rows.length){const e=document.createElement('p');e.className='empty';e.textContent=cur===12?'Aucune dépense saisie.':'Aucune dépense ce mois-ci. Ajoutez-en une ci-dessous.';d.appendChild(e)}
     sec.appendChild(d);
     if(s.id==='exp'&&cur!==12){
       const names=[...new Set(rowsOf('exp').map(l=>l.label))];
       const f=document.createElement('form');f.className='newcat';
-      f.innerHTML='<input class="f" name="nom" list="expNames" placeholder="Nom" aria-label="Nom de la dépense" autocomplete="off"><input class="f" name="mt" type="number" inputmode="decimal" min="0" step="any" placeholder="Montant" aria-label="Montant en euros"><input class="f tg" name="tag" list="tagNames" placeholder="Tag (option)" aria-label="Tag" autocomplete="off"><button class="t" type="submit">Ajouter</button><datalist id="expNames"></datalist><datalist id="tagNames"></datalist>';
-      allTags().forEach(n=>{const o=document.createElement('option');o.value=n;f.querySelector('#tagNames').appendChild(o)});
+      f.innerHTML='<input class="f" name="nom" list="expNames" placeholder="Nom" aria-label="Nom de la dépense" autocomplete="off"><input class="f" name="mt" type="number" inputmode="decimal" min="0" step="any" placeholder="Montant" aria-label="Montant en euros"><button class="t" type="submit">Ajouter</button><datalist id="expNames"></datalist>';
+      f.insertBefore(tagSelect('',''),f.querySelector('button'));
       names.forEach(n=>{const o=document.createElement('option');o.value=n;f.querySelector('datalist').appendChild(o)});
       f.onsubmit=ev=>{ev.preventDefault();
         const nom=f.nom.value.trim(),mt=parseFloat(f.mt.value);
         if(!nom){f.nom.focus();return}
         if(!(mt>0)){f.mt.focus();return}
         let l=rowsOf('exp').find(y=>y.label.toLowerCase()===nom.toLowerCase());
-        const tg=canonTag(f.tag.value);
+        const tg=f.tag.value==='__new'?'':f.tag.value;
         if(l){A[l.id][cur]+=mt;if(tg)l.tag=tg}
         else{l={id:uid(),sec:'exp',grp:'',label:nom,tag:tg,ord:Math.max(-1,...L.map(y=>y.ord))+1};L.push(l);A[l.id]=zeros();A[l.id][cur]=mt}
         save();build();refresh();document.querySelector('#app form.newcat input[name=nom]').focus()};
