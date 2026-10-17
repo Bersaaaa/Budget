@@ -1,7 +1,7 @@
 {
   "name": "Mon budget personnel",
   "short_name": "Budget",
-  "description": "Suivi mensuel des revenus, de l'épargne et des dépenses.",
+  "description": "Suivi mensuel des revenus, de l'épargne et des dépenses (données dans le navigateur).",
   "lang": "fr",
   "start_url": "./index.html",
   "scope": "./",

@@ -1,4 +1,4 @@
-const VERSION = 'budget-v1';
+const VERSION = 'budget-v3';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const STATIC_HOSTS = ['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
@@ -18,9 +18,6 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-
-  // Jamais de cache pour Supabase (données et authentification)
-  if (url.hostname.endsWith('supabase.co')) return;
 
   // Pages : réseau d'abord, cache si hors ligne
   if (req.mode === 'navigate') {
